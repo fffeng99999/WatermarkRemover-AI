@@ -1,7 +1,7 @@
 {
   "version": "0.68.0",
   "themes": [
-    { "id": "default", "name": "默认" }
+    { "id": "mixui", "name": "MixUI" }
   ],
   "languages": [
     { "id": "zh", "icon": "🇨🇳", "name": "简体中文", "randomizable": false },

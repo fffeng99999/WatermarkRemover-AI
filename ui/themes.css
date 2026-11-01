@@ -1,41 +1,278 @@
 /* =========================================
-   DEFAULT THEME STYLES
+   THEME: MIXUI (Modern Acrylic Glassmorphism)
    ========================================= */
 
-.model-dialog {
-    --model-surface: #111116;
-    --model-ink: #e5e7eb;
-    --model-accent: #67e8f9;
-    --model-on-accent: #111116;
+:root {
+    --mix-bg: #0b0f17;
+    --mix-surface: rgba(15, 23, 42, 0.75);
+    --mix-surface-card: rgba(23, 32, 54, 0.45);
+    --mix-surface-input: rgba(15, 23, 42, 0.8);
+    --mix-border: rgba(255, 255, 255, 0.08);
+    --mix-border-hover: rgba(56, 189, 248, 0.35);
+    --mix-primary-from: #4f46e5;
+    --mix-primary-to: #06b6d4;
+    --mix-text: #f8fafc;
+    --mix-text-muted: #94a3b8;
+    --mix-accent: #38bdf8;
+    --mix-success: #10b981;
+    --mix-warning: #f59e0b;
+    --mix-error: #ef4444;
 }
 
-body .glass-panel.model-dialog {
-    background: var(--model-surface) !important;
-    color: var(--model-ink) !important;
+/* Base Body Override */
+body, body.theme-mixui {
+    background-color: var(--mix-bg) !important;
+    color: var(--mix-text) !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif !important;
+    letter-spacing: -0.01em;
 }
 
-body .glass-panel.model-dialog p {
-    color: var(--model-ink) !important;
+/* Remove retro CRT Scanlines */
+.crt::before, body.theme-mixui .crt::before {
+    display: none !important;
 }
 
-body .glass-panel.model-dialog h2 {
-    color: var(--model-accent) !important;
+/* Refined Subtle Scrollbars */
+::-webkit-scrollbar {
+    width: 6px !important;
+    height: 6px !important;
+}
+::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-radius: 9999px !important;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(56, 189, 248, 0.4) !important;
 }
 
-.model-dialog #download-models {
-    background: var(--model-accent) !important;
-    color: var(--model-on-accent) !important;
-    border: 1px solid var(--model-accent) !important;
+/* Modern Glass Panels */
+.glass-panel,
+body.theme-mixui .glass-panel,
+aside,
+body.theme-mixui aside {
+    background: var(--mix-surface) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-color: var(--mix-border) !important;
 }
 
-.model-dialog #close-models {
-    background: var(--model-surface) !important;
-    color: var(--model-ink) !important;
-    border: 1px solid var(--model-accent) !important;
+aside {
+    border-right: 1px solid var(--mix-border) !important;
+    box-shadow: 4px 0 24px -4px rgba(0, 0, 0, 0.4) !important;
 }
 
-/* Keep model readiness inside the status bar, including inset window themes. */
-.status-bar {
+/* Header Brand Logo (MixUI typography) */
+.font-glitch,
+body.theme-mixui .font-glitch {
+    font-family: 'Inter', -apple-system, sans-serif !important;
+    font-weight: 800 !important;
+    font-size: 1.85rem !important;
+    letter-spacing: -0.03em !important;
+    line-height: 1.1 !important;
+    text-transform: uppercase !important;
+    background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #38bdf8 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    filter: drop-shadow(0 2px 10px rgba(56, 189, 248, 0.25)) !important;
+}
+
+/* Clean Tooltips */
+[data-tooltip]::after,
+body.theme-mixui [data-tooltip]::after {
+    background: rgba(15, 23, 42, 0.95) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    color: #f8fafc !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
+    font-family: 'Inter', -apple-system, sans-serif !important;
+    font-size: 11px !important;
+    line-height: 1.4 !important;
+}
+
+/* Mode Selector (Single / Batch) */
+.sidebar-header + .space-y-2 .grid {
+    background: rgba(15, 23, 42, 0.6);
+    padding: 3px;
+    border-radius: 14px;
+    border: 1px solid var(--mix-border);
+}
+
+.sidebar-header + .space-y-2 button {
+    border-radius: 10px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    border: none !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+button.bg-neon-green.text-black.shadow-\[0_0_15px_\#00ff88\],
+button.bg-neon-cyan.text-black.shadow-\[0_0_15px_\#00f3ff\],
+body.theme-mixui button.bg-neon-green.text-black,
+body.theme-mixui button.bg-neon-cyan.text-black {
+    background: linear-gradient(135deg, var(--mix-primary-from) 0%, var(--mix-primary-to) 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 15px rgba(79, 70, 229, 0.35) !important;
+}
+
+/* Card Containers (Settings Toggles & Sliders) */
+.bg-white\/5,
+body.theme-mixui .bg-white\/5 {
+    background: var(--mix-surface-card) !important;
+    border: 1px solid var(--mix-border) !important;
+    border-radius: 14px !important;
+    transition: border-color 0.2s ease, background 0.2s ease !important;
+}
+
+.bg-white\/5:hover,
+body.theme-mixui .bg-white\/5:hover {
+    border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+/* Toggle Switches */
+button.rounded-full.w-12.h-6,
+body.theme-mixui button.rounded-full.w-12.h-6 {
+    border-radius: 9999px !important;
+    transition: background-color 0.25s ease, box-shadow 0.25s ease !important;
+}
+
+button.rounded-full.bg-neon-pink,
+button.rounded-full.bg-neon-green,
+body.theme-mixui button.rounded-full.bg-neon-pink,
+body.theme-mixui button.rounded-full.bg-neon-green {
+    background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%) !important;
+    box-shadow: 0 0 12px rgba(79, 70, 229, 0.45) !important;
+}
+
+button.rounded-full.bg-gray-700,
+body.theme-mixui button.rounded-full.bg-gray-700 {
+    background: #334155 !important;
+    box-shadow: none !important;
+}
+
+/* Inputs & Selects */
+input[type="text"],
+select,
+body.theme-mixui input[type="text"],
+body.theme-mixui select {
+    background: var(--mix-surface-input) !important;
+    border: 1px solid var(--mix-border) !important;
+    border-radius: 10px !important;
+    color: var(--mix-text) !important;
+    font-family: 'Inter', -apple-system, sans-serif !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+input[type="text"]:focus,
+select:focus,
+body.theme-mixui input[type="text"]:focus,
+body.theme-mixui select:focus {
+    border-color: var(--mix-accent) !important;
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25), 0 0 15px rgba(56, 189, 248, 0.15) !important;
+    outline: none !important;
+}
+
+/* Range Sliders */
+input[type="range"] {
+    accent-color: #38bdf8 !important;
+}
+
+/* Preview Button */
+#preview-processing,
+body.theme-mixui #preview-processing {
+    background: rgba(56, 189, 248, 0.08) !important;
+    border: 1px solid rgba(56, 189, 248, 0.28) !important;
+    color: #38bdf8 !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+#preview-processing:hover:not(:disabled),
+body.theme-mixui #preview-processing:hover:not(:disabled) {
+    background: rgba(56, 189, 248, 0.18) !important;
+    border-color: rgba(56, 189, 248, 0.5) !important;
+    box-shadow: 0 0 18px rgba(56, 189, 248, 0.2) !important;
+}
+
+/* Primary Action Button (Start Processing) */
+#start-processing,
+body.theme-mixui #start-processing {
+    background: linear-gradient(135deg, #4f46e5 0%, #2563eb 50%, #06b6d4 100%) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 1.05rem !important;
+    letter-spacing: 0.02em !important;
+    border-radius: 14px !important;
+    box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+#start-processing:hover:not(:disabled),
+body.theme-mixui #start-processing:hover:not(:disabled) {
+    transform: translateY(-2px) scale(1.01) !important;
+    box-shadow: 0 8px 28px rgba(37, 99, 235, 0.6) !important;
+}
+
+#start-processing:active:not(:disabled),
+body.theme-mixui #start-processing:active:not(:disabled) {
+    transform: translateY(1px) scale(0.98) !important;
+}
+
+/* Marquee / Status Ticker */
+.bg-neon-pink,
+body.theme-mixui .bg-neon-pink {
+    background: rgba(15, 23, 42, 0.85) !important;
+    backdrop-filter: blur(12px) !important;
+    border-bottom: 1px solid var(--mix-border) !important;
+    color: var(--mix-text-muted) !important;
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.03em !important;
+}
+
+/* Drag & Drop Zone */
+.border-dashed,
+body.theme-mixui .border-dashed {
+    border-color: rgba(99, 102, 241, 0.3) !important;
+    border-radius: 18px !important;
+    background: rgba(15, 23, 42, 0.35) !important;
+    transition: all 0.25s ease !important;
+}
+
+.border-dashed:hover,
+body.theme-mixui .border-dashed:hover {
+    border-color: var(--mix-accent) !important;
+    background: rgba(56, 189, 248, 0.04) !important;
+    box-shadow: 0 0 30px rgba(56, 189, 248, 0.08) !important;
+}
+
+/* Right Content Area */
+main > div.flex-1 {
+    background: rgba(11, 15, 23, 0.5) !important;
+}
+
+/* Terminal / Logs Container */
+#logs-container,
+body.theme-mixui #logs-container {
+    background: rgba(10, 14, 23, 0.85) !important;
+    backdrop-filter: blur(16px) !important;
+    border-top: 1px solid var(--mix-border) !important;
+    color: #e2e8f0 !important;
+    font-family: 'Space Mono', 'Consolas', monospace !important;
+}
+
+/* Status Bar */
+.status-bar,
+body.theme-mixui .status-bar {
+    background: rgba(15, 23, 42, 0.85) !important;
+    backdrop-filter: blur(16px) !important;
+    border-top: 1px solid var(--mix-border) !important;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -61,8 +298,85 @@ body .glass-panel.model-dialog h2 {
     overflow-wrap: anywhere;
 }
 
-#models-button {
+#models-button,
+body.theme-mixui #models-button {
     flex: 0 0 auto;
     max-width: 100%;
     margin-left: auto;
+    background: rgba(56, 189, 248, 0.1) !important;
+    border: 1px solid rgba(56, 189, 248, 0.3) !important;
+    color: #38bdf8 !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+}
+
+#models-button:hover,
+body.theme-mixui #models-button:hover {
+    background: rgba(56, 189, 248, 0.2) !important;
+    border-color: rgba(56, 189, 248, 0.5) !important;
+}
+
+/* Color Tokens Override */
+.text-neon-green { color: #10b981 !important; }
+.text-neon-cyan { color: #38bdf8 !important; }
+.text-neon-pink { color: #818cf8 !important; }
+
+/* Video Settings Card */
+.bg-purple-900\/20,
+body.theme-mixui .bg-purple-900\/20 {
+    background: rgba(30, 27, 75, 0.35) !important;
+    border-color: rgba(129, 140, 248, 0.25) !important;
+    border-radius: 14px !important;
+}
+.text-purple-400 { color: #a5b4fc !important; }
+.text-purple-300 { color: #c7d2fe !important; }
+
+/* Modals & Dialogs (High Contrast WCAG AA >= 4.5:1) */
+.model-dialog {
+    --model-surface: #0f172a;
+    --model-ink: #f8fafc;
+    --model-accent: #38bdf8;
+    --model-on-accent: #0f172a;
+}
+
+body .glass-panel.model-dialog,
+body.theme-mixui .glass-panel.model-dialog {
+    background: var(--model-surface) !important;
+    color: var(--model-ink) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7) !important;
+}
+
+body .glass-panel.model-dialog p,
+body.theme-mixui .glass-panel.model-dialog p {
+    color: var(--model-ink) !important;
+}
+
+body .glass-panel.model-dialog h2,
+body.theme-mixui .glass-panel.model-dialog h2 {
+    color: var(--model-accent) !important;
+    font-weight: 700 !important;
+}
+
+.model-dialog #download-models,
+body.theme-mixui .model-dialog #download-models {
+    background: var(--model-accent) !important;
+    color: var(--model-on-accent) !important;
+    border: 1px solid var(--model-accent) !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+}
+
+.model-dialog #close-models,
+body.theme-mixui .model-dialog #close-models {
+    background: var(--model-surface) !important;
+    color: var(--model-ink) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 8px !important;
+}
+
+.bg-card,
+body.theme-mixui .bg-card {
+    background: rgba(15, 23, 42, 0.95) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }

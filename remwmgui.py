@@ -291,7 +291,7 @@ class Api:
             'detection_skip': detection_skip,
             'fade_in': fade_in,
             'fade_out': fade_out,
-            'theme': settings.get('theme', 'default'),
+            'theme': settings.get('theme', 'mixui'),
             'lang': settings.get('lang', 'zh')
         })
 

@@ -509,9 +509,9 @@
 
         // Theme switcher function
         function switchTheme(themeName) {
-            const themes = ['theme-slay', 'theme-sigma', 'theme-witch', 'theme-korpo', 'theme-coquette', 'theme-xp', 'theme-anime'];
+            const themes = ['theme-slay', 'theme-sigma', 'theme-witch', 'theme-korpo', 'theme-coquette', 'theme-xp', 'theme-anime', 'theme-mixui'];
             document.body.classList.remove(...themes);
-            if (themeName && themeName !== 'default') {
+            if (themeName) {
                 document.body.classList.add('theme-' + themeName);
             }
         }
@@ -545,7 +545,7 @@
                 processing: false,
                 progress: 0,
                 statusMsg: '',
-                theme: 'default',  // Default theme
+                theme: 'mixui',  // Default theme (MixUI)
                 lang: 'zh',
                 t: {}, // translations
                 // Dynamic config loaded from config.json
@@ -594,12 +594,12 @@
                     } catch (e) {
                         console.log('Failed to load config.json, using defaults');
                         this.appVersion = '0.0';
-                        this.availableThemes = [{ id: 'default', name: '默认' }];
+                        this.availableThemes = [{ id: 'mixui', name: 'MixUI' }];
                         this.availableLanguages = [{ id: 'zh', name: '简体中文' }, { id: 'en', name: 'English' }];
                     }
 
                     // Helper for defaults
-                    const defaultTheme = this.availableThemes[0]?.id || 'default';
+                    const defaultTheme = this.availableThemes[0]?.id || 'mixui';
                     const defaultLang = this.availableLanguages[0]?.id || 'zh';
 
                     // Load config when pywebview is ready
