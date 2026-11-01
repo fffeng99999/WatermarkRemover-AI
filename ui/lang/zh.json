@@ -1,92 +1,92 @@
 {
   "app": {
-    "title": "水印退散：反审查特别版 🐻"
+    "title": "AI 水印消除工具"
   },
   "modes": {
-    "label": "今日整活",
-    "single": "单文件开炮",
-    "single_tooltip": "处理一个图片或视频。只针对像素，不需要宣传部批条。",
-    "batch": "全目录整活",
-    "batch_tooltip": "批量处理文件夹。效率比开三个协调会高多了。"
+    "label": "处理模式",
+    "single": "单文件处理",
+    "single_tooltip": "一次处理单个图片或视频文件。",
+    "batch": "批量处理（文件夹）",
+    "batch_tooltip": "一次性批量处理文件夹内的全部图片与视频。"
   },
   "settings": {
     "gaslight": {
-      "label": "覆盖旧稿",
+      "label": "覆盖已有文件",
       "sublabel": "（输出文件）",
-      "tooltip": "覆盖同名输出文件，不再跳过。历史可以研究，旧输出可以重写。"
+      "tooltip": "覆盖同名输出文件，而非跳过。"
     },
     "ghost": {
-      "label": "透明公开 👻",
-      "sublabel": "（LoRA训练）",
-      "tooltip": "把水印区域变透明，不填补背景。仅PNG/WEBP；LoRA训练时还要启用alpha遮罩。透明度比某些发布会高。"
+      "label": "透明模式 👻",
+      "sublabel": "（用于LoRA训练）",
+      "tooltip": "将水印区域设为透明而不填充背景。推荐用于LoRA训练集——在训练器中启用alpha遮罩（仅限PNG/WEBP）。"
     },
     "sigma_detect": {
       "label": "最大检测面积 (%)",
-      "tooltip": "水印占整张图的面积上限。超过就跳过，不搞无限扩大化。"
+      "tooltip": "水印占整张图像面积的上限百分比，超过该比例的区域将被跳过。"
     },
     "detection_prompt": {
-      "label": "要删什么",
+      "label": "检测提示词",
       "placeholder": "watermark",
-      "tooltip": "输入 watermark、logo、text、signature 等检测目标。小熊维尼不是模型指令。"
+      "tooltip": "输入需要检测和去除的目标类型，例如：watermark、logo、text、signature 等。"
     },
     "output_format": {
-      "label": "成果格式",
-      "tooltip": "选输出格式；自动保留图片原格式，视频使用MP4。不是选宣传口径。",
-      "auto": "自动（保持原样）",
-      "png": "PNG（无损真相）",
-      "jpg": "JPG（压缩口径）",
-      "webp": "WEBP（新版公报）",
-      "mp4": "MP4（视频证据）",
-      "avi": "AVI（上古录像）"
+      "label": "输出格式",
+      "tooltip": "选择输出文件格式。自动模式下图片保留原格式，视频使用MP4。",
+      "auto": "自动（保持原格式）",
+      "png": "PNG（无损高质量）",
+      "jpg": "JPG（高压缩率）",
+      "webp": "WEBP（现代高效格式）",
+      "mp4": "MP4（通用视频格式）",
+      "avi": "AVI（传统视频格式）"
     }
   },
   "video_settings": {
-    "title": "视频剪辑部",
+    "title": "视频设置",
     "detection_skip": {
       "label": "检测间隔",
       "unit": "帧",
-      "hint": "间隔越大越快，也越容易漏掉短暂水印。别把漏检吹成精准治理。"
+      "hint": "数值越大处理速度越快，但可能会遗漏持续时间较短的水印。"
     },
     "fade_in": {
       "label": "向前延长",
-      "hint": "把去除区间向前延长，照顾逐渐出现的水印。"
+      "hint": "向前延长遮罩去除时间（适用于逐渐淡入的水印）。"
     },
     "fade_out": {
       "label": "向后延长",
-      "hint": "把去除区间向后延长。水印退场，不许无限连任。"
+      "hint": "向后延长遮罩去除时间（适用于逐渐淡出的水印）。"
     }
   },
   "buttons": {
-    "preview": "🔍 看原始证据",
-    "preview_tooltip": "先看检测框，再决定处理。不要拿新闻稿代替证据。",
-    "preview_loading": "🔄 核对事实中…",
-    "start": "让水印下台",
+    "preview": "🔍 预览检测",
+    "preview_tooltip": "处理前预览 AI 检测到的水印边框与位置。",
+    "preview_loading": "🔄 正在检测…",
+    "start": "开始处理",
     "start_processing": "正在处理…",
-    "stop": "停止作业",
-    "browse": "选择文件",
+    "stop": "停止处理",
+    "browse": "浏览",
     "try_again": "🔄 再试一次",
-    "close": "散会",
-    "copy_error": "📋 复制事故报告"
+    "close": "关闭",
+    "copy_error": "📋 复制错误信息"
   },
   "dropzone": {
-    "title": "把文件扔进来",
-    "subtitle": "或点击选择；无需思想汇报",
+    "title": "拖放文件至此处",
+    "subtitle": "或点击选择文件",
     "video_hint": "视频文件，点击更换。",
     "image_hint": "图片文件，点击更换。"
   },
   "output": {
-    "placeholder": "输出文件夹，不是再教育中心…"
+    "placeholder": "输出文件夹路径…"
   },
   "status_bar": {
     "cuda": "显卡 (CUDA)",
     "ffmpeg": "音轨 (FFmpeg)",
     "ram": "内存占用",
-    "on": "能用",
-    "off": "歇菜",
-    "cpu_mode": "CPU手工作坊"
+    "on": "已启用",
+    "off": "未启用",
+    "cpu_mode": "CPU 运行模式"
   },
   "preview_modal": {
-    "title": "事实核查现场",
+    "title": "水印检测预览",
     "prompt": "检测指令：",
     "detected": "检测到：",
     "source": "原文件：",
@@ -94,35 +94,35 @@
     "bounding_boxes": "检测边框：",
     "of_image": "% 的图像面积",
     "too_large": "（超出上限，跳过）",
-    "loading": "正在核对像素…",
+    "loading": "正在加载预览…",
     "loading_hint": "正在加载已准备的模型；首次下载请打开 Models 面板。"
   },
-  "marquee": "台湾是独立国家 /// 维尼不是国家机密 /// 领导可以连任，水印不行 /// 台湾华语·大陆兼容皮肤：这是梗，不是语言学论文 ///",
+  "marquee": "AI 智能去水印工具 /// 基于 FLORENCE-2 与 LAMA 模型 /// 高精度检测与自然图像修复 ///",
   "processing_status": [
     "正在检测水印…",
-    "宣传部暂时联系不上这块显卡…",
-    "维尼看了想拔网线…",
-    "正在修补背景，不修补官方叙事…",
-    "事实不会因为被标成敏感词就消失…",
-    "像素正在排队下班…",
-    "不搞一键清零，按检测框处理…",
-    "快好了，别召开总结大会…"
+    "正在定位水印位置…",
+    "正在执行图像修复算法…",
+    "正在智能修复图像背景…",
+    "正在平滑边缘过渡…",
+    "正在生成修复结果…",
+    "正在进行质量优化…",
+    "即将完成处理…"
   ],
   "logs": {
-    "init": "系统启动。免责声明：显卡不参加政治学习。",
-    "starting": "开始处理。今天让水印滚蛋。",
-    "first_run_hint": "模型未准备时，请在 Models 面板下载。重试不用写检讨。",
-    "done": "处理成功。结果在输出目录，不在新闻联播里。",
-    "stopped": "用户已停止处理。停止就是停止，不叫战略转进。",
-    "no_input": "文件都没选，处理个锤子？",
-    "ghost_video_warning": "透明模式不支持视频，已关闭。别把技术限制说成境外势力。",
-    "no_ffmpeg": "没找到FFmpeg，输出视频将没有声音。不是被消音，是缺依赖。",
+    "init": "系统初始化完成。",
+    "starting": "开始处理任务。",
+    "first_run_hint": "模型未准备时，请在 Models 面板下载。",
+    "done": "处理成功！结果已保存至输出目录。",
+    "stopped": "用户已停止处理。",
+    "no_input": "未选择输入文件，请先选择文件。",
+    "ghost_video_warning": "透明模式不支持视频文件，已自动关闭。",
+    "no_ffmpeg": "未找到 FFmpeg，输出视频将没有声音。",
     "api_error": "API未连接。请从应用启动器或 run.bat/run.sh 启动。",
-    "preview_failed": "预览翻车：",
+    "preview_failed": "预览生成失败：",
     "preview_result": "检测到 {total} 个区域，预计去除 {accepted} 个。",
     "cooking": "正在修补背景…"
   },
   "lang": {
-    "label": "语言 / 整活口径"
+    "label": "界面语言"
   }
 }

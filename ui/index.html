@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WM REMOVER - OHIO EDITION</title>
+    <title>WatermarkRemover-AI</title>
 
     <!-- Tailwind + Alpine + Fonts -->
     <link rel="stylesheet" href="vendor/tailwind.css">
@@ -70,7 +70,7 @@
             visibility: hidden;
             transition: opacity 0.15s ease, visibility 0.15s ease;
             pointer-events: none;
-            /* Default theme (brainrot) */
+            /* Default theme */
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             color: #00ff88;
             border: 1px solid #00ff88;
@@ -91,7 +91,7 @@
     <link rel="stylesheet" href="themes.css">
 </head>
 <body class="h-screen w-screen flex crt selection:bg-neon-pink selection:text-white overflow-hidden"
-      x-data="brainrotApp()" x-init="init()">
+      x-data="app()" x-init="init()">
 
     <!-- LOADING OVERLAY -->
     <div x-show="isLoading" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
@@ -107,11 +107,9 @@
         </div>
     </div>
 
-    <!-- BACKGROUND CHAOS -->
-    <div class="fixed inset-0 z-0 opacity-30 pointer-events-none">
-        <div class="absolute top-10 left-10 text-9xl animate-pulse text-neon-green">💀</div>
-        <div class="absolute bottom-20 right-10 text-8xl animate-bounce text-neon-pink">🔥</div>
-        <div class="absolute top-1/2 left-1/4 w-96 h-96 bg-neon-cyan blur-[150px] rounded-full mix-blend-screen opacity-30"></div>
+    <!-- BACKGROUND AMBIENT -->
+    <div class="fixed inset-0 z-0 opacity-20 pointer-events-none">
+        <div class="absolute top-1/2 left-1/4 w-96 h-96 bg-neon-cyan blur-[150px] rounded-full mix-blend-screen opacity-20"></div>
     </div>
 
     <!-- MAIN UI CONTAINER - fills entire window -->
@@ -131,7 +129,7 @@
                 </div>
                 <!-- Theme & Language Selectors -->
                 <div class="flex flex-col gap-1">
-                    <select x-show="availableThemes.length > 0" x-model="theme" @change="switchTheme(theme); saveConfigDebounced()" class="bg-black/50 border border-white/20 text-white text-[10px] rounded-lg px-2 py-1 focus:border-neon-pink outline-none font-mono">
+                    <select x-show="availableThemes.length > 1" x-model="theme" @change="switchTheme(theme); saveConfigDebounced()" class="bg-black/50 border border-white/20 text-white text-[10px] rounded-lg px-2 py-1 focus:border-neon-pink outline-none font-mono">
                         <template x-for="th in availableThemes" :key="th.id">
                             <option :value="th.id" :selected="th.id === theme" x-text="th.name || th.id"></option>
                         </template>
@@ -513,7 +511,7 @@
         function switchTheme(themeName) {
             const themes = ['theme-slay', 'theme-sigma', 'theme-witch', 'theme-korpo', 'theme-coquette', 'theme-xp', 'theme-anime'];
             document.body.classList.remove(...themes);
-            if (themeName !== 'brainrot') {
+            if (themeName && themeName !== 'default') {
                 document.body.classList.add('theme-' + themeName);
             }
         }
@@ -526,15 +524,15 @@
                 return await response.json();
             } catch (e) {
                 console.error('Failed to load language:', lang, e);
-                // Fallback to brainrot
-                if (lang !== 'brainrot') {
-                    return await loadLanguage('brainrot');
+                // Fallback to zh or en
+                if (lang !== 'zh' && lang !== 'en') {
+                    return await loadLanguage('zh');
                 }
                 return null;
             }
         }
 
-        function brainrotApp() {
+        function app() {
             return {
                 isLoading: true, // Show loading screen until config loads
                 mode: 'single',
@@ -547,8 +545,8 @@
                 processing: false,
                 progress: 0,
                 statusMsg: '',
-                theme: 'brainrot',  // Default theme for loading screen
-                lang: 'en',
+                theme: 'default',  // Default theme
+                lang: 'zh',
                 t: {}, // translations
                 // Dynamic config loaded from config.json
                 appVersion: '',
@@ -596,14 +594,13 @@
                     } catch (e) {
                         console.log('Failed to load config.json, using defaults');
                         this.appVersion = '0.0';
-                        this.availableThemes = [{ id: 'brainrot' }];
-                        this.availableLanguages = [{ id: 'brainrot', randomizable: true }, { id: 'en', randomizable: false }];
+                        this.availableThemes = [{ id: 'default', name: '默认' }];
+                        this.availableLanguages = [{ id: 'zh', name: '简体中文' }, { id: 'en', name: 'English' }];
                     }
 
-                    // Helper to pick random from array
-                    const pickRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
-                    const randomizableThemes = this.availableThemes.map(t => t.id);
-                    const randomizableLangs = this.availableLanguages.filter(l => l.randomizable).map(l => l.id);
+                    // Helper for defaults
+                    const defaultTheme = this.availableThemes[0]?.id || 'default';
+                    const defaultLang = this.availableLanguages[0]?.id || 'zh';
 
                     // Load config when pywebview is ready
                     const loadConfig = async () => {
@@ -625,9 +622,11 @@
                             this.fadeIn = config.fade_in || 0;
                             this.fadeOut = config.fade_out || 0;
 
-                            // Theme & Language (always load, use saved or pick random)
-                            this.theme = config.theme || pickRandom(randomizableThemes);
-                            this.lang = config.lang || pickRandom(randomizableLangs);
+                            // Theme & Language
+                            const themeValid = this.availableThemes.some(t => t.id === config.theme);
+                            const langValid = this.availableLanguages.some(l => l.id === config.lang);
+                            this.theme = themeValid ? config.theme : defaultTheme;
+                            this.lang = langValid ? config.lang : defaultLang;
                             switchTheme(this.theme);
                             await this.switchLang(this.lang);
 
@@ -636,9 +635,8 @@
                             this.isLoading = false;     // Hide loading screen
                         } catch (e) {
                             console.log('Config load failed:', e);
-                            // Still need to load translations with defaults
-                            this.theme = pickRandom(randomizableThemes);
-                            this.lang = pickRandom(randomizableLangs);
+                            this.theme = defaultTheme;
+                            this.lang = defaultLang;
                             switchTheme(this.theme);
                             await this.switchLang(this.lang);
                             this.isLoading = false;
@@ -654,8 +652,8 @@
                         setTimeout(() => {
                             if (this.isLoading) {
                                 this.bridgeError = "Connecting to the desktop engine is taking longer than expected. If controls remain unavailable, restart the app and check desktop.log.";
-                                this.theme = pickRandom(randomizableThemes);
-                                this.lang = pickRandom(randomizableLangs);
+                                this.theme = defaultTheme;
+                                this.lang = defaultLang;
                                 switchTheme(this.theme);
                                 this.switchLang(this.lang);
                                 this.isLoading = false;

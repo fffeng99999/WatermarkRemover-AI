@@ -1,23 +1,10 @@
 {
   "version": "0.68.0",
   "themes": [
-    { "id": "brainrot", "name": "Brainrot" },
-    { "id": "slay", "name": "Slay Queen" },
-    { "id": "sigma", "name": "Sigma" },
-    { "id": "witch", "name": "WitchTok" },
-    { "id": "korpo", "name": "Corporate" },
-    { "id": "coquette", "name": "Coquette" },
-    { "id": "xp", "name": "Windows XP" },
-    { "id": "anime", "name": "Anime" }
+    { "id": "default", "name": "默认" }
   ],
   "languages": [
-    { "id": "brainrot", "icon": "🧠", "name": "Brainrot", "randomizable": true },
-    { "id": "en", "icon": "🇬🇧", "name": "English", "randomizable": false },
-    { "id": "fr", "icon": "🇫🇷", "name": "Français", "randomizable": false },
-    { "id": "zh", "icon": "🇨🇳", "name": "中文·反审查", "randomizable": false },
-    { "id": "jp", "icon": "🇯🇵", "name": "限界オタク", "randomizable": false },
-    { "id": "br", "icon": "🇧🇷", "name": "Brasileiro", "randomizable": false },
-    { "id": "corpslop", "icon": "🍔", "name": "CorpSlop", "randomizable": false },
-    { "id": "en_il", "icon": "🎙️", "name": "English (Israeli PR)", "randomizable": false }
+    { "id": "zh", "icon": "🇨🇳", "name": "简体中文", "randomizable": false },
+    { "id": "en", "icon": "🇬🇧", "name": "English", "randomizable": false }
   ]
 }
