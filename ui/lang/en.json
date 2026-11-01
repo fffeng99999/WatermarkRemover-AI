@@ -26,8 +26,8 @@
     },
     "detection_prompt": {
       "label": "Detection Prompt",
-      "placeholder": "watermark",
-      "tooltip": "What to detect and remove. Try: watermark, logo, text, signature, etc."
+      "placeholder": "watermark, logo",
+      "tooltip": "What to detect and remove. Separate multiple targets with commas (e.g. 'watermark, logo, text') to remove both simultaneously."
     },
     "output_format": {
       "label": "Output Format",
@@ -64,6 +64,7 @@
     "start_processing": "Processing...",
     "stop": "Stop",
     "browse": "Browse",
+    "open_folder": "Open Folder",
     "try_again": "🔄 Try Again",
     "close": "Close",
     "copy_error": "📋 Copy Error"

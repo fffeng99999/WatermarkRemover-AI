@@ -12,7 +12,9 @@ from urllib.request import Request, urlopen
 
 from filelock import FileLock
 
-from desktop_runtime import data_dir
+from desktop_runtime import configure_runtime, data_dir
+
+configure_runtime()
 
 MANIFEST = json.loads((Path(__file__).parent / "models/florence.json").read_text())
 FLORENCE_REPO = MANIFEST["repo"]
@@ -173,7 +175,7 @@ def main():
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--florence-only", action="store_true")
     parser.add_argument("--endpoint", help="Persist an HTTPS Florence endpoint for future desktop retries")
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
     def emit(event):
         """Flush each event so the GUI can report progress while the worker runs."""
         print(json.dumps(event), flush=True)

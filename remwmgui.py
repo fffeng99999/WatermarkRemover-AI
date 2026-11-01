@@ -3,6 +3,19 @@ WatermarkRemover-AI GUI
 PyWebview frontend with responsive HTML UI
 """
 
+import sys
+import os
+
+# Ensure Chromium in QtWebEngine doesn't crash on Windows with sandboxed IPC failures
+if sys.platform == "win32":
+    flags = "--no-sandbox --single-process"
+    current_flags = os.environ.get("QTWEBENGINE_CHROMIUM_FLAGS", "")
+    if "--no-sandbox" not in current_flags:
+        os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = f"{current_flags} {flags}".strip()
+    for flag in ["--no-sandbox", "--single-process"]:
+        if flag not in sys.argv:
+            sys.argv.append(flag)
+
 import logging
 
 import webview
@@ -127,6 +140,38 @@ class Api:
         result = self.window.create_file_dialog(webview.FileDialog.FOLDER)
         return result[0] if result else None
 
+    def open_folder(self, target_path=None):
+        """Open the target folder in the system file explorer."""
+        if not target_path:
+            return {'error': '未指定输出目录'}
+
+        path = os.path.abspath(target_path)
+        if os.path.isfile(path):
+            path = os.path.dirname(path)
+
+        if not os.path.exists(path):
+            try:
+                os.makedirs(path, exist_ok=True)
+            except Exception:
+                path = os.path.dirname(path)
+
+        if not os.path.exists(path):
+            return {'error': f'目录不存在: {path}'}
+
+        try:
+            if sys.platform == 'win32':
+                try:
+                    os.startfile(os.path.normpath(path))
+                except Exception:
+                    subprocess.Popen(['explorer', os.path.normpath(path)])
+            elif sys.platform == 'darwin':
+                subprocess.Popen(['open', path])
+            else:
+                subprocess.Popen(['xdg-open', path])
+            return {'success': True, 'path': path}
+        except Exception as e:
+            return {'error': str(e)}
+
     def _would_overwrite_input(self, input_path, output_path):
         """Check if output would overwrite the input file."""
         supported_ext = {'.png', '.jpg', '.jpeg', '.webp', '.bmp', '.mp4', '.avi', '.mov', '.mkv', '.flv', '.wmv', '.webm'}
@@ -216,7 +261,7 @@ class Api:
         try:
             subprocess.run(['ffmpeg', '-version'], capture_output=True, check=True, timeout=5, creationflags=creationflags)
             info['ffmpeg'] = True
-        except (subprocess.SubprocessError, FileNotFoundError):
+        except (subprocess.SubprocessError, FileNotFoundError, OSError):
             info['ffmpeg'] = False
 
         return info
@@ -263,6 +308,17 @@ class Api:
         if would_overwrite_input:
             return {'error': 'Cannot overwrite input file! Choose a different output folder.'}
 
+        # Check if output directory is writable
+        check_dir = output_path if os.path.isdir(output_path) else os.path.dirname(output_path)
+        if check_dir and os.path.exists(check_dir):
+            try:
+                test_file = os.path.join(check_dir, f".test_wmr_{os.getpid()}.tmp")
+                with open(test_file, "w") as f:
+                    f.write("test")
+                os.remove(test_file)
+            except (OSError, PermissionError):
+                return {'error': f'输出文件夹缺少写入权限（Windows系统拒绝访问），请更换其他输出目录（如选择原图目录或桌面）'}
+
         # Check for file conflicts if overwrite is not enabled
         if not overwrite:
             conflicts = self._check_file_conflicts(input_path, output_path)
@@ -273,7 +329,7 @@ class Api:
                 return {'error': error_msg}
 
         # Get settings
-        detection_prompt = settings.get('detection_prompt', 'watermark')
+        detection_prompt = settings.get('detection_prompt', 'watermark, logo')
         detection_skip = settings.get('detection_skip', 1)
         fade_in = settings.get('fade_in', 0)
         fade_out = settings.get('fade_out', 0)
@@ -311,7 +367,7 @@ class Api:
         if format_opt and format_opt != 'None':
             cmd.append(f'--force-format={format_opt}')
 
-        if detection_prompt and detection_prompt != 'watermark':
+        if detection_prompt:
             cmd.append(f'--detection-prompt={detection_prompt}')
 
         if detection_skip and int(detection_skip) > 1:
@@ -461,7 +517,7 @@ class Api:
         try:
             cmd = [python_executable(), str(APP_ROOT / 'remwm.py'), input_path, '--preview',
                    '--max-bbox-percent', str(int(settings.get('max_bbox', 15))),
-                   '--detection-prompt', settings.get('detection_prompt', 'watermark')]
+                   '--detection-prompt', settings.get('detection_prompt', 'watermark, logo')]
             with self._process_lock:
                 if self._closed:
                     return {'error': 'Window is closing'}

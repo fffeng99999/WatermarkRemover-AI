@@ -103,9 +103,57 @@ def extract_strokes(roi: np.ndarray) -> np.ndarray:
     return cv2.dilate(stroke_mask, kernel, iterations=2)
 
 
+def parse_detection_prompts(prompt_str: str) -> list[str]:
+    """
+    Split composite detection prompt by comma/semicolon/plus/and into distinct sub-prompts.
+    Allows detecting and removing multiple targets simultaneously (e.g. 'watermark, logo').
+    """
+    if not prompt_str:
+        return ["watermark"]
+    import re
+    parts = re.split(r'[,;，；|/]+|\s+(?:and|\+|以及|和)\s+', prompt_str.strip())
+    seen = set()
+    cleaned = []
+    for p in parts:
+        p = p.strip()
+        if p and p.lower() not in seen:
+            seen.add(p.lower())
+            cleaned.append(p)
+    return cleaned if cleaned else [prompt_str.strip()]
+
+
+def merge_bboxes(bboxes, iou_thresh: float = 0.5):
+    """Merge overlapping or redundant bounding boxes."""
+    if not bboxes:
+        return []
+    merged = []
+    for box in bboxes:
+        x1, y1, x2, y2 = map(int, box)
+        matched = False
+        for i, m in enumerate(merged):
+            mx1, my1, mx2, my2 = m
+            ix1, iy1 = max(x1, mx1), max(y1, my1)
+            ix2, iy2 = min(x2, mx2), min(y2, my2)
+            if ix2 > ix1 and iy2 > iy1:
+                iarea = (ix2 - ix1) * (iy2 - iy1)
+                area1 = (x2 - x1) * (y2 - y1)
+                area2 = (mx2 - mx1) * (my2 - my1)
+                union_area = area1 + area2 - iarea
+                iou = iarea / union_area if union_area > 0 else 0
+                overlap_ratio = iarea / min(area1, area2) if min(area1, area2) > 0 else 0
+                if iou >= iou_thresh or overlap_ratio >= 0.7:
+                    merged[i] = [min(x1, mx1), min(y1, my1), max(x2, mx2), max(y2, my2)]
+                    matched = True
+                    break
+        if not matched:
+            merged.append([x1, y1, x2, y2])
+    return merged
+
+
 def get_watermark_mask(image: MatLike, model: Florence2ForConditionalGeneration, processor: AutoProcessor, device: str, max_bbox_percent: float, detection_prompt: str = "watermark", mask_mode: str = "box"):
     """
     Detect watermarks and create a mask for inpainting.
+    Supports composite prompts (e.g. 'watermark, logo') to detect both simultaneously.
 
     Args:
         image: PIL Image
@@ -113,22 +161,30 @@ def get_watermark_mask(image: MatLike, model: Florence2ForConditionalGeneration,
         processor: Florence-2 processor
         device: cuda or cpu
         max_bbox_percent: Maximum bbox size as percentage of image
-        detection_prompt: Text prompt for detection (e.g. "watermark", "watermark Sora logo", "Getty Images")
+        detection_prompt: Text prompt for detection (e.g. "watermark, logo", "Getty Images")
         mask_mode: 'box' or 'stroke' (default: 'box')
     """
     task_prompt = TaskType.OPEN_VOCAB_DETECTION
-    parsed_answer = identify(task_prompt, image, detection_prompt, model, processor, device)
+    prompts = parse_detection_prompts(detection_prompt)
+
+    detection_key = "<OPEN_VOCABULARY_DETECTION>"
+    raw_bboxes = []
+    for p in prompts:
+        parsed_answer = identify(task_prompt, image, p, model, processor, device)
+        if detection_key in parsed_answer and "bboxes" in parsed_answer[detection_key]:
+            raw_bboxes.extend(parsed_answer[detection_key]["bboxes"])
+
+    bboxes = merge_bboxes(raw_bboxes)
 
     mask = Image.new("L", image.size, 0)
     draw = ImageDraw.Draw(mask)
 
-    detection_key = "<OPEN_VOCABULARY_DETECTION>"
-    if detection_key in parsed_answer and "bboxes" in parsed_answer[detection_key]:
+    if bboxes:
         image_area = image.width * image.height
         img_np = np.array(image) if mask_mode == "stroke" else None
         mask_np = np.zeros((image.height, image.width), dtype=np.uint8) if mask_mode == "stroke" else None
 
-        for bbox in parsed_answer[detection_key]["bboxes"]:
+        for bbox in bboxes:
             x1, y1, x2, y2 = map(int, bbox)
             x1, y1 = max(0, x1), max(0, y1)
             x2, y2 = min(image.width, x2), min(image.height, y2)
@@ -153,19 +209,27 @@ def detect_only(image: MatLike, model: Florence2ForConditionalGeneration, proces
     """
     Detect watermarks and return bounding boxes WITHOUT creating mask or inpainting.
     Used for preview mode to show what would be detected.
+    Supports composite prompts (e.g. 'watermark, logo') to detect multiple targets.
 
     Returns:
         list of dicts with bbox info: [{"bbox": [x1,y1,x2,y2], "area_percent": float, "accepted": bool}, ...]
     """
     task_prompt = TaskType.OPEN_VOCAB_DETECTION
-    parsed_answer = identify(task_prompt, image, detection_prompt, model, processor, device)
+    prompts = parse_detection_prompts(detection_prompt)
+
+    detection_key = "<OPEN_VOCABULARY_DETECTION>"
+    raw_bboxes = []
+    for p in prompts:
+        parsed_answer = identify(task_prompt, image, p, model, processor, device)
+        if detection_key in parsed_answer and "bboxes" in parsed_answer[detection_key]:
+            raw_bboxes.extend(parsed_answer[detection_key]["bboxes"])
+
+    bboxes = merge_bboxes(raw_bboxes)
 
     results = []
-    detection_key = "<OPEN_VOCABULARY_DETECTION>"
-
-    if detection_key in parsed_answer and "bboxes" in parsed_answer[detection_key]:
+    if bboxes:
         image_area = image.width * image.height
-        for bbox in parsed_answer[detection_key]["bboxes"]:
+        for bbox in bboxes:
             x1, y1, x2, y2 = map(int, bbox)
             bbox_area = (x2 - x1) * (y2 - y1)
             area_percent = (bbox_area / image_area) * 100
@@ -646,7 +710,13 @@ def handle_one(image_path: Path, output_path: Path, florence_model, florence_pro
         output_format = "PNG"
 
     new_output_path = output_path.with_suffix(f".{output_format.lower()}")
-    result_image.save(new_output_path, format=output_format)
+    new_output_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        result_image.save(new_output_path, format=output_format)
+    except PermissionError as exc:
+        logger.error(f"Permission denied while saving to {new_output_path}. The destination folder or file lacks write permissions.")
+        print(f"ERROR: Permission denied: Cannot write to {new_output_path}. Please choose another output folder (e.g. source folder or desktop).")
+        raise
     # Report progress for this image (end of range)
     final_progress = progress_offset + progress_scale
     print(f"input_path:{image_path}, output_path:{new_output_path}, overall_progress:{final_progress}%")
@@ -660,7 +730,7 @@ def handle_one(image_path: Path, output_path: Path, florence_model, florence_pro
 @click.option("--transparent", is_flag=True, help="Make watermark regions transparent instead of removing.")
 @click.option("--max-bbox-percent", default=10.0, help="Maximum percentage of the image that a bounding box can cover.")
 @click.option("--force-format", type=click.Choice(["PNG", "WEBP", "JPG", "MP4", "AVI"], case_sensitive=False), default=None, help="Force output format. Defaults to input format.")
-@click.option("--detection-prompt", default="watermark", help="Text prompt for watermark detection (e.g. 'watermark', 'watermark Sora logo', 'Getty Images').")
+@click.option("--detection-prompt", default="watermark, logo", help="Text prompt for watermark detection (e.g. 'watermark, logo', 'watermark Sora logo', 'Getty Images').")
 @click.option("--detection-skip", default=1, type=int, help="Detect watermarks every N frames for videos (1-10). Higher = faster but may miss brief watermarks.")
 @click.option("--fade-in", default=0.0, type=float, help="Extend mask backwards by N seconds to handle fade-in watermarks.")
 @click.option("--fade-out", default=0.0, type=float, help="Extend mask forwards by N seconds to handle fade-out watermarks.")

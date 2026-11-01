@@ -26,8 +26,8 @@
     },
     "detection_prompt": {
       "label": "检测提示词",
-      "placeholder": "watermark",
-      "tooltip": "输入需要检测和去除的目标类型，例如：watermark、logo、text、signature 等。"
+      "placeholder": "watermark, logo",
+      "tooltip": "检测目标类型。支持用逗号分隔多个目标（例如 watermark, logo 或 text），可同时去除水印文字与图标 Logo。"
     },
     "output_format": {
       "label": "输出格式",
@@ -64,6 +64,7 @@
     "start_processing": "正在处理…",
     "stop": "停止处理",
     "browse": "浏览",
+    "open_folder": "打开目录",
     "try_again": "🔄 再试一次",
     "close": "关闭",
     "copy_error": "📋 复制错误信息"
