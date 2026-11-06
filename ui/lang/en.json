@@ -6,6 +6,8 @@
     "label": "Processing Mode",
     "single": "Single File",
     "single_tooltip": "Process one image or video file at a time.",
+    "multi": "Multiple Files",
+    "multi_tooltip": "Add multiple images to a queue with thumbnail preview, repeated addition, and item deletion.",
     "batch": "Batch (Folder)",
     "batch_tooltip": "Process all images/videos in a folder at once."
   },
@@ -73,7 +75,11 @@
     "title": "Drop Files Here",
     "subtitle": "or click to browse",
     "video_hint": "video file - click to change",
-    "image_hint": "click to change"
+    "image_hint": "click to change",
+    "multi_title": "Click or drop images to queue",
+    "multi_subtitle": "Click repeatedly to append more images",
+    "clear_all": "Clear All",
+    "add_more": "Add More"
   },
   "output": {
     "placeholder": "Output folder..."

@@ -146,10 +146,12 @@
             <!-- MODE SELECTOR -->
             <div class="space-y-2">
                 <label class="text-xs font-bold text-neon-green uppercase tracking-wider" x-text="t.modes?.label || 'Mode'"></label>
-                <div class="grid grid-cols-2 gap-2">
-                    <button @click="mode='single'; saveConfigDebounced()" :data-tooltip="t.modes?.single_tooltip || ''" :class="mode=='single' ? 'bg-neon-green text-black shadow-[0_0_15px_#00ff88]' : 'bg-white/5 hover:bg-white/10 text-gray-400'" class="p-3 rounded-xl font-black text-sm transition-all border border-white/10" x-text="t.modes?.single || 'Single'">
+                <div class="grid grid-cols-3 gap-1.5 p-1 bg-white/5 rounded-xl border border-white/10">
+                    <button @click="mode='single'; saveConfigDebounced()" :data-tooltip="t.modes?.single_tooltip || ''" :class="mode=='single' ? 'bg-neon-green text-black font-black' : 'text-gray-400 hover:text-white'" class="py-2.5 px-2 rounded-lg text-xs font-bold transition-all truncate" x-text="t.modes?.single || '单文件'">
                     </button>
-                    <button data-tooltip-align="end" @click="mode='batch'; saveConfigDebounced()" :data-tooltip="t.modes?.batch_tooltip || ''" :class="mode=='batch' ? 'bg-neon-cyan text-black shadow-[0_0_15px_#00f3ff]' : 'bg-white/5 hover:bg-white/10 text-gray-400'" class="p-3 rounded-xl font-black text-sm transition-all border border-white/10" x-text="t.modes?.batch || 'Batch'">
+                    <button @click="mode='multi'; saveConfigDebounced()" :data-tooltip="t.modes?.multi_tooltip || ''" :class="mode=='multi' ? 'bg-neon-cyan text-black font-black' : 'text-gray-400 hover:text-white'" class="py-2.5 px-2 rounded-lg text-xs font-bold transition-all truncate" x-text="t.modes?.multi || '多文件'">
+                    </button>
+                    <button data-tooltip-align="end" @click="mode='batch'; saveConfigDebounced()" :data-tooltip="t.modes?.batch_tooltip || ''" :class="mode=='batch' ? 'bg-neon-green text-black font-black' : 'text-gray-400 hover:text-white'" class="py-2.5 px-2 rounded-lg text-xs font-bold transition-all truncate" x-text="t.modes?.batch || '批量'">
                     </button>
                 </div>
             </div>
@@ -293,8 +295,8 @@
             <!-- DRAG & DROP ZONE -->
             <div class="flex-1 p-6 flex flex-col gap-4">
 
-                <!-- Input Box -->
-                <div @click="browseInput()"
+                <!-- Input Box (Single / Batch Mode) -->
+                <div x-show="mode !== 'multi'" @click="browseInput()"
                      class="border-2 border-dashed border-white/20 rounded-2xl flex-1 flex flex-col items-center justify-center p-8 transition-all hover:border-neon-green hover:bg-neon-green/5 group cursor-pointer relative overflow-hidden">
                     <template x-if="!inputPath">
                         <div class="text-center">
@@ -310,9 +312,72 @@
                             <p class="text-sm text-gray-500 mt-2 font-mono" x-text="isVideoFile(inputPath) ? (t.dropzone?.video_hint || 'video - click to change') : (t.dropzone?.image_hint || 'click to change')"></p>
                         </div>
                     </template>
-
                     <!-- Background Grid Animation -->
                     <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMCwgMjU1LSAxMzYsIDAuMSkiLz48L3N2Zz4=')] opacity-20"></div>
+                </div>
+
+                <!-- Multi-file Queue Container (Multi Mode) -->
+                <div x-show="mode === 'multi'" class="flex-1 flex flex-col gap-3 min-h-0 overflow-hidden">
+                    <!-- Queue Top Actions Bar -->
+                    <div class="flex items-center justify-between bg-white/5 p-3 rounded-xl border border-white/10 flex-shrink-0">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-bold text-white">📋 处理队列</span>
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/30 font-mono" x-text="fileQueue.length + ' 项'"></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button @click="browseInput()" class="px-3 py-1.5 bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 rounded-lg text-xs font-bold transition-colors flex items-center gap-1">
+                                <span>➕</span>
+                                <span x-text="t.dropzone?.add_more || '继续添加'"></span>
+                            </button>
+                            <button @click="clearQueue()" :disabled="fileQueue.length === 0" class="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-lg text-xs font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1">
+                                <span>🗑️</span>
+                                <span x-text="t.dropzone?.clear_all || '一键清空'"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Queue Empty Dropzone Placeholder -->
+                    <div x-show="fileQueue.length === 0" @click="browseInput()"
+                         class="border-2 border-dashed border-white/20 rounded-2xl flex-1 flex flex-col items-center justify-center p-8 transition-all hover:border-neon-cyan hover:bg-sky-500/5 group cursor-pointer relative overflow-hidden">
+                        <div class="text-center">
+                            <div class="text-5xl mb-4 group-hover:scale-110 transition-transform">📚</div>
+                            <h3 class="text-lg font-bold text-white group-hover:text-neon-cyan" x-text="t.dropzone?.multi_title || '点击或拖拽添加图片到队列'"></h3>
+                            <p class="text-xs text-gray-400 mt-2 font-mono" x-text="t.dropzone?.multi_subtitle || '可多次点击反复添加图片'"></p>
+                        </div>
+                    </div>
+
+                    <!-- Queue Scrollable List -->
+                    <div x-show="fileQueue.length > 0" class="flex-1 overflow-y-auto space-y-2 pr-1 select-none">
+                        <template x-for="(item, idx) in fileQueue" :key="item.path">
+                            <div class="flex items-center justify-between p-2.5 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 hover:border-white/15 transition-all gap-3">
+                                <!-- Left Thumbnail Preview -->
+                                <div class="w-12 h-12 rounded-lg overflow-hidden bg-black/60 border border-white/10 flex-shrink-0 flex items-center justify-center relative shadow-inner">
+                                    <template x-if="item.thumb">
+                                        <img :src="item.thumb" class="w-full h-full object-cover">
+                                    </template>
+                                    <template x-if="!item.thumb">
+                                        <span class="text-lg" x-text="isVideoFile(item.path) ? '🎬' : '🖼️'"></span>
+                                    </template>
+                                </div>
+
+                                <!-- Center Info -->
+                                <div class="flex-1 min-w-0 cursor-pointer" @click="previewQueueItem(idx)">
+                                    <div class="font-bold text-xs text-gray-200 truncate hover:text-sky-300 transition-colors" x-text="item.name"></div>
+                                    <div class="text-[10px] text-gray-500 font-mono truncate" x-text="item.path"></div>
+                                </div>
+
+                                <!-- Right Actions -->
+                                <div class="flex items-center gap-1.5 flex-shrink-0">
+                                    <button @click="previewQueueItem(idx)" class="px-2.5 py-1 text-xs text-sky-400 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 rounded-lg transition-colors" :title="t.buttons?.preview || '预览'">
+                                        🔍
+                                    </button>
+                                    <button @click="removeFromQueue(idx)" class="px-2.5 py-1 text-xs text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 rounded-lg transition-colors" title="移除此项">
+                                        ✕
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
                 </div>
 
                 <!-- Output Path Input -->
@@ -529,6 +594,7 @@
             return {
                 isLoading: true, // Show loading screen until config loads
                 mode: 'single',
+                fileQueue: [],   // Multi-file queue
                 overwrite: false,
                 transparent: false,
                 detection: 15,
@@ -610,6 +676,9 @@
                             this.detection = config.max_bbox_percent || 15;
                             this.format = config.force_format || 'None';
                             this.mode = config.mode || 'single';
+                            if (config.files && Array.isArray(config.files)) {
+                                this.addFilesToQueue(config.files);
+                            }
                             this.detectionPrompt = config.detection_prompt || 'watermark, logo';
                             this.detectionSkip = config.detection_skip || 1;
                             this.fadeIn = config.fade_in || 0;
@@ -744,6 +813,19 @@
                 },
 
                 async browseInput() {
+                    if (this.mode === 'multi') {
+                        if (!window.pywebview?.api?.browse_files) {
+                            this.addLogEntry(this.t.logs?.api_error || "API not available. Please run via run.bat/run.sh", "text-error");
+                            return;
+                        }
+                        const files = await pywebview.api.browse_files();
+                        if (files && files.length > 0) {
+                            this.addFilesToQueue(files);
+                            this.addLogEntry(`已添加 ${files.length} 个文件到处理队列。`, "text-neon-cyan");
+                        }
+                        return;
+                    }
+
                     const picker =
                         window.pywebview?.api?.browse_file ||
                         (this.mode === 'single'
@@ -763,6 +845,49 @@
                     if (path) {
                         this.inputPath = path;
                         this.saveConfigDebounced();
+                    }
+                },
+
+                addFilesToQueue(paths) {
+                    if (!paths || paths.length === 0) return;
+                    for (const p of paths) {
+                        if (!this.fileQueue.some(item => item.path === p)) {
+                            const name = p.split(/[\\/]/).pop();
+                            const item = { path: p, name: name, thumb: null };
+                            this.fileQueue.push(item);
+                            if (window.pywebview?.api?.get_thumbnail) {
+                                pywebview.api.get_thumbnail(p).then(thumb => {
+                                    if (thumb) item.thumb = thumb;
+                                });
+                            }
+                        }
+                    }
+                    if (this.fileQueue.length > 0 && !this.inputPath) {
+                        this.inputPath = this.fileQueue[0].path;
+                    }
+                    this.saveConfigDebounced();
+                },
+
+                removeFromQueue(idx) {
+                    this.fileQueue.splice(idx, 1);
+                    if (this.fileQueue.length > 0) {
+                        this.inputPath = this.fileQueue[0].path;
+                    } else {
+                        this.inputPath = '';
+                    }
+                    this.saveConfigDebounced();
+                },
+
+                clearQueue() {
+                    this.fileQueue = [];
+                    this.inputPath = '';
+                    this.saveConfigDebounced();
+                },
+
+                previewQueueItem(idx) {
+                    if (this.fileQueue[idx]) {
+                        this.inputPath = this.fileQueue[idx].path;
+                        this.runPreview();
                     }
                 },
 
@@ -823,7 +948,13 @@
                 },
                 async startProcessing() {
                     if (this.models.status !== 'ready') { this.modelsOpen = true; return; }
-                    if (!this.inputPath) {
+                    if (this.mode === 'multi') {
+                        if (!this.fileQueue || this.fileQueue.length === 0) {
+                            this.addLogEntry("处理队列为空，请先点击「继续添加」加入图片文件。", "text-error");
+                            return;
+                        }
+                        this.inputPath = this.fileQueue[0].path;
+                    } else if (!this.inputPath) {
                         this.addLogEntry(this.t.logs?.no_input || "No input selected. Please select a file first.", "text-error");
                         return;
                     }
@@ -854,7 +985,8 @@
                                 max_bbox: this.detection,
                                 format: this.format,
                                 mode: this.mode,
-                                detection_prompt: this.detectionPrompt || 'watermark',
+                                files: this.fileQueue.map(f => f.path),
+                                detection_prompt: this.detectionPrompt || 'watermark, logo',
                                 // Video settings
                                 detection_skip: parseInt(this.detectionSkip) || 1,
                                 fade_in: parseFloat(this.fadeIn) || 0,
@@ -995,6 +1127,7 @@
                         max_bbox_percent: this.detection,
                         force_format: this.format,
                         mode: this.mode,
+                        files: this.fileQueue.map(f => f.path),
                         detection_prompt: this.detectionPrompt,
                         // Video settings
                         detection_skip: parseInt(this.detectionSkip) || 1,

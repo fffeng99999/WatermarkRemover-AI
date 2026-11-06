@@ -6,6 +6,8 @@
     "label": "处理模式",
     "single": "单文件处理",
     "single_tooltip": "一次处理单个图片或视频文件。",
+    "multi": "多文件处理",
+    "multi_tooltip": "选择多张图片加入队列，支持反复点击添加、缩略图预览与逐项删除。",
     "batch": "批量处理（文件夹）",
     "batch_tooltip": "一次性批量处理文件夹内的全部图片与视频。"
   },
@@ -73,7 +75,11 @@
     "title": "拖放文件至此处",
     "subtitle": "或点击选择文件",
     "video_hint": "视频文件，点击更换。",
-    "image_hint": "图片文件，点击更换。"
+    "image_hint": "图片文件，点击更换。",
+    "multi_title": "点击或拖拽添加图片到队列",
+    "multi_subtitle": "可多次点击反复添加图片",
+    "clear_all": "一键清空",
+    "add_more": "继续添加"
   },
   "output": {
     "placeholder": "输出文件夹路径…"

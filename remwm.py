@@ -723,8 +723,9 @@ def handle_one(image_path: Path, output_path: Path, florence_model, florence_pro
     return new_output_path
 
 @click.command()
-@click.argument("input_path", type=click.Path(exists=True))
+@click.argument("input_path", type=click.Path(exists=True), required=False, default=None)
 @click.argument("output_path", type=click.Path(), required=False, default=None)
+@click.option("--file-list", type=click.Path(exists=True), default=None, help="Text file listing input paths to process (one per line).")
 @click.option("--preview", is_flag=True, help="Preview mode: detect watermarks and output JSON with base64 image (no processing).")
 @click.option("--overwrite", is_flag=True, help="Overwrite existing files in bulk mode.")
 @click.option("--transparent", is_flag=True, help="Make watermark regions transparent instead of removing.")
@@ -737,7 +738,7 @@ def handle_one(image_path: Path, output_path: Path, florence_model, florence_pro
 @click.option("--mask-mode", type=click.Choice(["box", "stroke"], case_sensitive=False), default="box", help="Mask mode: 'box' (default) or 'stroke' for edge/stroke-level mask.")
 @click.option("--double-pass", is_flag=True, default=False, help="Run a second inpainting pass on the mask.")
 @click.option("--max-dim", type=click.IntRange(min=1), default=None, help="Downscale image if max dimension exceeds this value.")
-def main(input_path: str, output_path: str, preview: bool, overwrite: bool, transparent: bool, max_bbox_percent: float, force_format: str, detection_prompt: str, detection_skip: int, fade_in: float, fade_out: float, mask_mode: str, double_pass: bool, max_dim: int):
+def main(input_path: str, output_path: str, file_list: str, preview: bool, overwrite: bool, transparent: bool, max_bbox_percent: float, force_format: str, detection_prompt: str, detection_skip: int, fade_in: float, fade_out: float, mask_mode: str, double_pass: bool, max_dim: int):
     """
     CLI entry point for WatermarkRemover-AI to process images, videos, or directories.
 
@@ -788,17 +789,28 @@ def main(input_path: str, output_path: str, preview: bool, overwrite: bool, tran
         florence_processor = AutoProcessor.from_pretrained(florence_path)
 
         # Get sample image from input
-        if input_path.is_dir():
-            # Get a random image from directory
-            images = list(input_path.glob("*.[jp][pn]g")) + list(input_path.glob("*.webp"))
-            videos = list(input_path.glob("*.mp4")) + list(input_path.glob("*.avi")) + list(input_path.glob("*.mov"))
-            files = images + videos
-            if not files:
-                print(json.dumps({"error": "No supported files found in directory"}))
+        if input_path is not None:
+            input_path = Path(input_path)
+            if input_path.is_dir():
+                images = list(input_path.glob("*.[jp][pn]g")) + list(input_path.glob("*.webp"))
+                videos = list(input_path.glob("*.mp4")) + list(input_path.glob("*.avi")) + list(input_path.glob("*.mov"))
+                files = images + videos
+                if not files:
+                    print(json.dumps({"error": "No supported files found in directory"}))
+                    return
+                sample_path = random.choice(files)
+            else:
+                sample_path = input_path
+        elif file_list:
+            with open(file_list, "r", encoding="utf-8") as f:
+                lines = [Path(line.strip()) for line in f if line.strip() and Path(line.strip()).exists()]
+            if not lines:
+                print(json.dumps({"error": "No valid files found in file list"}))
                 return
-            sample_path = random.choice(files)
+            sample_path = lines[0]
         else:
-            sample_path = input_path
+            print(json.dumps({"error": "No input file specified"}))
+            return
 
         # Load image (extract frame if video)
         if is_video_file(sample_path):
@@ -873,7 +885,25 @@ def main(input_path: str, output_path: str, preview: bool, overwrite: bool, tran
     else:
         model_manager = None
 
-    if input_path.is_dir():
+    if file_list:
+        with open(file_list, "r", encoding="utf-8") as f:
+            files = [Path(line.strip()) for line in f if line.strip() and Path(line.strip()).exists()]
+        if not files:
+            logger.warning("No valid files found in file list")
+            print("ERROR: No valid files found in file list")
+            return
+        total_files = len(files)
+        output_path.mkdir(parents=True, exist_ok=True)
+        for idx, file_path in enumerate(tqdm.tqdm(files, desc="Processing files")):
+            output_file = output_path / file_path.name
+            progress_offset = int(idx / total_files * 100)
+            progress_scale = int(100 / total_files)
+            handle_one(file_path, output_file, florence_model, florence_processor, model_manager, device, transparent, max_bbox_percent, force_format, overwrite, detection_prompt, detection_skip, fade_in, fade_out, progress_offset, progress_scale, mask_mode=mask_mode, double_pass=double_pass, max_dim=max_dim)
+        print("overall_progress:100")
+        return
+
+    if input_path is not None and Path(input_path).is_dir():
+        input_path = Path(input_path)
         if not output_path.exists():
             output_path.mkdir(parents=True)
 

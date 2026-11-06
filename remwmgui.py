@@ -132,6 +132,54 @@ class Api:
         )
         return result[0] if result else None
 
+    def browse_files(self):
+        """Open file browser dialog allowing multiple file selection"""
+        if not self.window:
+            return []
+
+        file_types = (
+            'All supported files (*.png;*.jpg;*.jpeg;*.webp;*.bmp;*.mp4;*.avi;*.mov;*.mkv;*.flv;*.wmv;*.webm)',
+            'Images (*.png;*.jpg;*.jpeg;*.webp;*.bmp)',
+            'Videos (*.mp4;*.avi;*.mov;*.mkv;*.flv;*.wmv;*.webm)',
+            'All files (*.*)'
+        )
+
+        result = self.window.create_file_dialog(
+            webview.FileDialog.OPEN,
+            allow_multiple=True,
+            file_types=file_types
+        )
+        return list(result) if result else []
+
+    def get_thumbnail(self, file_path):
+        """Generate a fast base64 thumbnail for queue preview"""
+        try:
+            from io import BytesIO
+            from PIL import Image
+            if not file_path or not os.path.exists(file_path):
+                return None
+            ext = os.path.splitext(file_path)[1].lower()
+            if ext not in {'.mp4', '.avi', '.mov', '.mkv', '.flv', '.wmv', '.webm'}:
+                with Image.open(file_path) as img:
+                    img.thumbnail((120, 120))
+                    buf = BytesIO()
+                    img.convert('RGB').save(buf, format='JPEG', quality=80)
+                    return 'data:image/jpeg;base64,' + base64.b64encode(buf.getvalue()).decode('utf-8')
+            else:
+                import cv2
+                cap = cv2.VideoCapture(str(file_path))
+                ret, frame = cap.read()
+                cap.release()
+                if ret:
+                    pil_img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+                    pil_img.thumbnail((120, 120))
+                    buf = BytesIO()
+                    pil_img.save(buf, format='JPEG', quality=80)
+                    return 'data:image/jpeg;base64,' + base64.b64encode(buf.getvalue()).decode('utf-8')
+        except Exception:
+            pass
+        return None
+
     def browse_folder(self):
         """Open folder browser dialog"""
         if not self.window:
@@ -289,24 +337,36 @@ class Api:
 
         if self._models.status().get('status') != 'ready':
             return {'error': 'Prepare the AI models before processing. Open Models and choose Download / Retry.'}
+        mode = settings.get('mode', 'single')
+        file_list = settings.get('files', [])
         input_path = settings.get('input', '')
         output_path = settings.get('output', '')
 
-        if not input_path:
-            return {'error': 'No input path specified'}
-
-        # Use input directory as output if not specified
-        if not output_path:
-            if os.path.isfile(input_path):
+        if mode == 'multi':
+            if not file_list:
+                return {'error': '多文件队列为空，请先添加文件'}
+            input_path = file_list[0]
+            if not output_path:
                 output_path = os.path.dirname(input_path)
-            else:
-                output_path = input_path
+        else:
+            if not input_path:
+                return {'error': 'No input path specified'}
+            if not output_path:
+                if os.path.isfile(input_path):
+                    output_path = os.path.dirname(input_path)
+                else:
+                    output_path = input_path
 
         # SAFETY: Check if output would overwrite input
         overwrite = settings.get('overwrite', False)
-        would_overwrite_input = self._would_overwrite_input(input_path, output_path)
-        if would_overwrite_input:
-            return {'error': 'Cannot overwrite input file! Choose a different output folder.'}
+        if mode == 'multi':
+            for f in file_list:
+                if self._would_overwrite_input(f, output_path):
+                    return {'error': f'输出目录不能覆盖输入文件: {os.path.basename(f)}，请选择不同的输出目录'}
+        else:
+            would_overwrite_input = self._would_overwrite_input(input_path, output_path)
+            if would_overwrite_input:
+                return {'error': 'Cannot overwrite input file! Choose a different output folder.'}
 
         # Check if output directory is writable
         check_dir = output_path if os.path.isdir(output_path) else os.path.dirname(output_path)
@@ -321,7 +381,14 @@ class Api:
 
         # Check for file conflicts if overwrite is not enabled
         if not overwrite:
-            conflicts = self._check_file_conflicts(input_path, output_path)
+            if mode == 'multi':
+                conflicts = []
+                for f in file_list:
+                    out_file = os.path.join(output_path, os.path.basename(f))
+                    if os.path.exists(out_file):
+                        conflicts.append(os.path.basename(out_file))
+            else:
+                conflicts = self._check_file_conflicts(input_path, output_path)
             if conflicts:
                 conflict_list = ', '.join(conflicts[:3])
                 more = f" (+{len(conflicts)-3} more)" if len(conflicts) > 3 else ""
@@ -342,7 +409,7 @@ class Api:
             'transparent': settings.get('transparent', False),
             'max_bbox_percent': settings.get('max_bbox', 15),
             'force_format': settings.get('format', 'None'),
-            'mode': settings.get('mode', 'single'),
+            'mode': mode,
             'detection_prompt': detection_prompt,
             'detection_skip': detection_skip,
             'fade_in': fade_in,
@@ -352,7 +419,12 @@ class Api:
         })
 
         # Build command
-        cmd = [python_executable(), str(APP_ROOT / 'remwm.py'), input_path, output_path]
+        if mode == 'multi':
+            queue_file = data_dir() / "queue_files.txt"
+            queue_file.write_text('\n'.join(file_list), encoding='utf-8')
+            cmd = [python_executable(), str(APP_ROOT / 'remwm.py'), '--file-list', str(queue_file), '', output_path]
+        else:
+            cmd = [python_executable(), str(APP_ROOT / 'remwm.py'), input_path, output_path]
 
         if settings.get('overwrite'):
             cmd.append('--overwrite')
